@@ -90,17 +90,131 @@ interface ExpenseContextType {
 }
 
 const STORAGE_KEYS = {
-  USER: 'ai_expense_user_v2',
-  TOKEN: 'ai_expense_token_v2',
-  CATEGORIES: 'ai_expense_categories_v2',
-  TRANSACTIONS: 'ai_expense_transactions_v2',
-  BUDGETS: 'ai_expense_budgets_v2',
-  RECURRING: 'ai_expense_recurring_v2',
-  GOALS: 'ai_expense_goals_v2',
-  NOTIFICATIONS: 'ai_expense_notifications_v2',
-  ACHIEVEMENTS: 'ai_expense_achievements_v2',
-  CHALLENGE: 'ai_expense_challenge_v2',
+  USER: 'ai_expense_current_user_v3',
+  TOKEN: 'ai_expense_current_token_v3',
 };
+
+const getUserStorageKey = (userId: string, key: string) => `ai_expense_user_${userId}_${key}_v3`;
+
+function loadUserData(userId: string, userObj?: User) {
+  const isDemoOrAdmin = userId === 'user_default' || userId === 'user_admin';
+
+  // Categories
+  const savedCategories = localStorage.getItem(getUserStorageKey(userId, 'categories'));
+  const userCategories: Category[] = savedCategories
+    ? JSON.parse(savedCategories)
+    : INITIAL_CATEGORIES.map((c) => ({ ...c, userId, id: `${c.id}_${userId}` }));
+
+  // Transactions - ZERO default transactions for regular/new users!
+  const savedTransactions = localStorage.getItem(getUserStorageKey(userId, 'transactions'));
+  let userTransactions: Transaction[] = [];
+  if (savedTransactions) {
+    userTransactions = JSON.parse(savedTransactions);
+  } else if (isDemoOrAdmin) {
+    userTransactions = INITIAL_TRANSACTIONS.map((t) => ({ ...t, userId }));
+  } else {
+    userTransactions = [];
+  }
+
+  // Budgets
+  const savedBudgets = localStorage.getItem(getUserStorageKey(userId, 'budgets'));
+  let userBudgets: Budget[] = [];
+  if (savedBudgets) {
+    userBudgets = JSON.parse(savedBudgets);
+  } else if (isDemoOrAdmin) {
+    userBudgets = INITIAL_BUDGETS.map((b) => ({ ...b, userId }));
+  } else {
+    userBudgets = [];
+  }
+
+  // Recurring
+  const savedRecurring = localStorage.getItem(getUserStorageKey(userId, 'recurring'));
+  let userRecurring: RecurringTransaction[] = [];
+  if (savedRecurring) {
+    userRecurring = JSON.parse(savedRecurring);
+  } else if (isDemoOrAdmin) {
+    userRecurring = INITIAL_RECURRING.map((r) => ({ ...r, userId }));
+  } else {
+    userRecurring = [];
+  }
+
+  // Goals
+  const savedGoals = localStorage.getItem(getUserStorageKey(userId, 'goals'));
+  let userGoals: SavingsGoal[] = [];
+  if (savedGoals) {
+    userGoals = JSON.parse(savedGoals);
+  } else if (isDemoOrAdmin) {
+    userGoals = INITIAL_GOALS.map((g) => ({ ...g, userId }));
+  } else {
+    userGoals = [];
+  }
+
+  // Notifications
+  const savedNotifications = localStorage.getItem(getUserStorageKey(userId, 'notifications'));
+  let userNotifications: SmartNotification[] = [];
+  if (savedNotifications) {
+    userNotifications = JSON.parse(savedNotifications);
+  } else if (isDemoOrAdmin) {
+    userNotifications = INITIAL_NOTIFICATIONS.map((n) => ({ ...n, userId }));
+  } else {
+    userNotifications = [
+      {
+        id: `notif_welcome_${Date.now()}`,
+        userId,
+        type: 'streak_milestone',
+        title: 'Welcome to Your Private Expense Dashboard',
+        message: `Hello ${userObj?.name || 'there'}! Your personal financial ledger is ready. Log your first expense or try voice entry!`,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+      },
+    ];
+  }
+
+  // Achievements
+  const savedAchievements = localStorage.getItem(getUserStorageKey(userId, 'achievements'));
+  const userAchievements: Achievement[] = savedAchievements
+    ? JSON.parse(savedAchievements)
+    : INITIAL_ACHIEVEMENTS.map((a) => ({
+        ...a,
+        isUnlocked: isDemoOrAdmin ? a.isUnlocked : false,
+        currentValue: isDemoOrAdmin ? a.currentValue : 0,
+      }));
+
+  // Challenge
+  const savedChallenge = localStorage.getItem(getUserStorageKey(userId, 'challenge'));
+  const userChallenge: SavingChallenge = savedChallenge
+    ? JSON.parse(savedChallenge)
+    : isDemoOrAdmin
+    ? INITIAL_SAVING_CHALLENGE
+    : {
+        id: `ch_${Date.now()}`,
+        userId,
+        startDate: '2026-08-01',
+        dailyLimit: 1000,
+        days: Array.from({ length: 30 }, (_, i) => ({
+          dayNumber: i + 1,
+          date: `2026-08-${String(i + 1).padStart(2, '0')}`,
+          spent: 0,
+          isWithinLimit: false,
+          isCompleted: false,
+        })),
+        currentStreak: 0,
+        longestStreak: 0,
+        totalSaved: 0,
+        status: 'active',
+      };
+
+  return {
+    categories: userCategories,
+    transactions: userTransactions,
+    budgets: userBudgets,
+    recurring: userRecurring,
+    goals: userGoals,
+    notifications: userNotifications,
+    achievements: userAchievements,
+    savingChallenge: userChallenge,
+  };
+}
 
 const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
@@ -111,50 +225,35 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
 
   const [token, setTokenState] = useState<string | null>(() => {
-    return localStorage.getItem(STORAGE_KEYS.TOKEN) || 'demo_active_token';
+    return localStorage.getItem(STORAGE_KEYS.TOKEN);
   });
 
-  const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-  });
+  // User-scoped data states initialized for current user
+  const initialData = useMemo(() => loadUserData(user.id, user), [user.id]);
 
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
-  });
+  const [categories, setCategories] = useState<Category[]>(initialData.categories);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialData.transactions);
+  const [budgets, setBudgets] = useState<Budget[]>(initialData.budgets);
+  const [recurring, setRecurring] = useState<RecurringTransaction[]>(initialData.recurring);
+  const [goals, setGoals] = useState<SavingsGoal[]>(initialData.goals);
+  const [notifications, setNotifications] = useState<SmartNotification[]>(initialData.notifications);
+  const [achievements, setAchievements] = useState<Achievement[]>(initialData.achievements);
+  const [savingChallenge, setSavingChallenge] = useState<SavingChallenge>(initialData.savingChallenge);
 
-  const [budgets, setBudgets] = useState<Budget[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.BUDGETS);
-    return saved ? JSON.parse(saved) : INITIAL_BUDGETS;
-  });
+  // When user.id changes, load that user's isolated data
+  useEffect(() => {
+    const loaded = loadUserData(user.id, user);
+    setCategories(loaded.categories);
+    setTransactions(loaded.transactions);
+    setBudgets(loaded.budgets);
+    setRecurring(loaded.recurring);
+    setGoals(loaded.goals);
+    setNotifications(loaded.notifications);
+    setAchievements(loaded.achievements);
+    setSavingChallenge(loaded.savingChallenge);
+  }, [user.id]);
 
-  const [recurring, setRecurring] = useState<RecurringTransaction[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.RECURRING);
-    return saved ? JSON.parse(saved) : INITIAL_RECURRING;
-  });
-
-  const [goals, setGoals] = useState<SavingsGoal[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
-    return saved ? JSON.parse(saved) : INITIAL_GOALS;
-  });
-
-  const [notifications, setNotifications] = useState<SmartNotification[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
-  });
-
-  const [achievements, setAchievements] = useState<Achievement[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ACHIEVEMENTS);
-    return saved ? JSON.parse(saved) : INITIAL_ACHIEVEMENTS;
-  });
-
-  const [savingChallenge, setSavingChallenge] = useState<SavingChallenge>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CHALLENGE);
-    return saved ? JSON.parse(saved) : INITIAL_SAVING_CHALLENGE;
-  });
-
-  // Sync to localStorage
+  // Sync to user-scoped localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
   }, [user]);
@@ -165,36 +264,52 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [token]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'categories'), JSON.stringify(categories));
+    }
+  }, [categories, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-  }, [transactions]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'transactions'), JSON.stringify(transactions));
+    }
+  }, [transactions, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(budgets));
-  }, [budgets]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'budgets'), JSON.stringify(budgets));
+    }
+  }, [budgets, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.RECURRING, JSON.stringify(recurring));
-  }, [recurring]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'recurring'), JSON.stringify(recurring));
+    }
+  }, [recurring, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(goals));
-  }, [goals]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'goals'), JSON.stringify(goals));
+    }
+  }, [goals, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
-  }, [notifications]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'notifications'), JSON.stringify(notifications));
+    }
+  }, [notifications, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
-  }, [achievements]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'achievements'), JSON.stringify(achievements));
+    }
+  }, [achievements, user.id]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CHALLENGE, JSON.stringify(savingChallenge));
-  }, [savingChallenge]);
+    if (user.id) {
+      localStorage.setItem(getUserStorageKey(user.id, 'challenge'), JSON.stringify(savingChallenge));
+    }
+  }, [savingChallenge, user.id]);
 
   const currencySymbol = user.currencySymbol || '₹';
 

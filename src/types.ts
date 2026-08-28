@@ -4,12 +4,51 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role?: 'admin' | 'user';
+  status?: 'active' | 'suspended';
   currency: string;
   currencySymbol: string;
   monthlyIncomeTarget?: number;
   savingsRateTarget?: number;
   avatarUrl?: string;
   createdAt: string;
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'suspended';
+  currency: string;
+  currencySymbol: string;
+  monthlyIncomeTarget: number;
+  savingsRateTarget: number;
+  createdAt: string;
+  lastLogin: string;
+  transactionCount?: number;
+  totalLoggedVolume?: number;
+}
+
+export interface AdminMetrics {
+  totalUsers: number;
+  activeUsers: number;
+  adminCount: number;
+  totalPlatformVolume: number;
+  totalTransactionsLogged: number;
+  avgSavingsRate: number;
+  aiRequestsProcessed: number;
+  serverUptime: string;
+  activeGeminiModel: string;
+}
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  user: string;
+  action: string;
+  details: string;
+  ip: string;
 }
 
 export interface Category {

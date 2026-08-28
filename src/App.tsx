@@ -13,13 +13,18 @@ import { AIChatView } from './components/AIChatView';
 import { PredictionView } from './components/PredictionView';
 import { GamificationView } from './components/GamificationView';
 import { SettingsView } from './components/SettingsView';
+import { AdminDashboardView } from './components/AdminDashboardView';
+import { AuthView } from './components/AuthView';
+import { LandingView } from './components/LandingView';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { NaturalLanguageInputModal } from './components/NaturalLanguageInputModal';
 import { NotificationDrawer } from './components/NotificationDrawer';
-import { Menu, Sparkles } from 'lucide-react';
-import { TransactionType } from './types';
+import { Menu, Sparkles, X } from 'lucide-react';
+import { TransactionType, User } from './types';
+import { INITIAL_USER } from './data/seedData';
 
 const MainLayout: React.FC = () => {
+  const { token, user, setUser, setToken, logoutUser } = useExpense();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -28,6 +33,8 @@ const MainLayout: React.FC = () => {
   const [addModalInitialType, setAddModalInitialType] = useState<TransactionType>('Expense');
   const [isNlModalOpen, setIsNlModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Dark Mode (Default to true for luminous Frosted Glass effect)
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -49,6 +56,66 @@ const MainLayout: React.FC = () => {
     setAddModalInitialType(type);
     setIsAddModalOpen(true);
   };
+
+  const handleOpenAuth = (mode: 'login' | 'register') => {
+    setAuthMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleExploreDemo = (role: 'admin' | 'user' = 'user') => {
+    if (role === 'admin') {
+      const adminUser: User = {
+        id: 'user_admin',
+        name: 'System Administrator',
+        email: 'admin@expenseai.com',
+        role: 'admin',
+        currency: 'INR',
+        currencySymbol: '₹',
+        monthlyIncomeTarget: 75000,
+        savingsRateTarget: 45,
+        createdAt: '2026-01-01T00:00:00.000Z',
+      };
+      setUser(adminUser);
+      setToken('demo_admin_jwt_token');
+    } else {
+      setUser(INITIAL_USER);
+      setToken('demo_user_jwt_token');
+    }
+  };
+
+  // If not authenticated, display the Website Landing Page with Login and Sign Up buttons!
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-sky-500/30 selection:text-sky-200">
+        <LandingView
+          onOpenAuth={handleOpenAuth}
+          onExploreDemo={handleExploreDemo}
+          darkMode={darkMode}
+          onToggleDarkMode={() => setDarkMode(!darkMode)}
+        />
+
+        {/* Authentication Modal */}
+        {isAuthModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+            <div className="relative w-full max-w-md">
+              <button
+                onClick={() => setIsAuthModalOpen(false)}
+                className="absolute right-3 top-3 z-10 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <AuthView
+                initialMode={authMode}
+                onSuccess={() => {
+                  setIsAuthModalOpen(false);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -83,6 +150,8 @@ const MainLayout: React.FC = () => {
         return <PredictionView />;
       case 'gamification':
         return <GamificationView />;
+      case 'admin':
+        return <AdminDashboardView />;
       case 'settings':
         return <SettingsView />;
       default:
@@ -107,6 +176,9 @@ const MainLayout: React.FC = () => {
         onToggleDarkMode={() => setDarkMode(!darkMode)}
         onNavigateToSettings={() => setActiveTab('settings')}
         onNavigateToAiChat={() => setActiveTab('ai-chat')}
+        onOpenAuthModal={() => handleOpenAuth('login')}
+        onNavigateToAdmin={() => setActiveTab('admin')}
+        onLogout={logoutUser}
       />
 
       {/* Main App Container */}
@@ -138,6 +210,26 @@ const MainLayout: React.FC = () => {
           {renderContent()}
         </main>
       </div>
+
+      {/* Authentication / Account Switch Modal */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-md">
+            <button
+              onClick={() => setIsAuthModalOpen(false)}
+              className="absolute right-3 top-3 z-10 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <AuthView
+              initialMode={authMode}
+              onSuccess={() => {
+                setIsAuthModalOpen(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Add Transaction Modal */}
       <AddTransactionModal

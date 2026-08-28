@@ -10,6 +10,9 @@ import {
   Zap,
   TrendingUp,
   ShieldCheck,
+  Shield,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useExpense } from '../context/ExpenseContext';
 
@@ -21,6 +24,9 @@ interface NavbarProps {
   onToggleDarkMode: () => void;
   onNavigateToSettings: () => void;
   onNavigateToAiChat: () => void;
+  onOpenAuthModal?: () => void;
+  onNavigateToAdmin?: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -31,9 +37,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onToggleDarkMode,
   onNavigateToSettings,
   onNavigateToAiChat,
+  onOpenAuthModal,
+  onNavigateToAdmin,
+  onLogout,
 }) => {
-  const { user, currencySymbol, setCurrency, notifications } = useExpense();
+  const { user, currencySymbol, setCurrency, notifications, logoutUser } = useExpense();
   const unreadAlerts = notifications.filter((n) => !n.isRead).length;
+  const isAdmin = user.role === 'admin' || user.email.toLowerCase().includes('admin');
 
   const currencies = [
     { code: 'INR', symbol: '₹', label: 'INR (₹)' },
@@ -88,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Currency Switcher */}
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <select
               value={user.currency}
               onChange={(e) => {
@@ -131,20 +141,51 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </button>
 
-          {/* User Avatar Button */}
+          {/* Switch / Login Button */}
+          {onOpenAuthModal && (
+            <button
+              onClick={onOpenAuthModal}
+              title="Switch Account / Login / Register"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-400/30 text-xs font-bold transition-all cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Switch / Login</span>
+            </button>
+          )}
+
+          {/* Log Out / Exit to Landing */}
+          <button
+            onClick={() => {
+              if (onLogout) onLogout();
+              else logoutUser();
+            }}
+            title="Log Out & Return to Landing Website"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 text-xs font-bold transition-all cursor-pointer"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Sign Out</span>
+          </button>
+
+          {/* User Avatar & Role Button */}
           <button
             onClick={onNavigateToSettings}
-            className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-xl bg-white/30 dark:bg-slate-800/50 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all"
+            className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-xl bg-white/30 dark:bg-slate-800/50 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all cursor-pointer"
           >
             <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white text-xs font-semibold flex items-center justify-center shadow-xs">
               {user.name.charAt(0)}
             </div>
-            <span className="text-xs font-medium text-slate-700 dark:text-slate-200 hidden md:inline max-w-[90px] truncate">
-              {user.name}
-            </span>
+            <div className="hidden md:flex flex-col text-left">
+              <span className="text-xs font-medium text-slate-700 dark:text-slate-200 max-w-[80px] truncate leading-tight">
+                {user.name}
+              </span>
+              <span className={`text-[9px] font-extrabold uppercase leading-none ${isAdmin ? 'text-amber-500' : 'text-sky-400'}`}>
+                {isAdmin ? 'Admin' : 'User'}
+              </span>
+            </div>
           </button>
         </div>
       </div>
     </header>
   );
 };
+

@@ -13,7 +13,9 @@ import {
   Settings,
   Sparkles,
   Flame,
+  ShieldCheck,
 } from 'lucide-react';
+import { useExpense } from '../context/ExpenseContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -28,6 +30,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile,
   onCloseMobile,
 }) => {
+  const { user } = useExpense();
+  const isAdmin = user.role === 'admin' || user.email.toLowerCase().includes('admin');
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'transactions', label: 'Transactions', icon: <Receipt className="w-4 h-4" /> },
@@ -52,6 +57,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'gamification',
       label: 'Discipline & Badges',
       icon: <Trophy className="w-4 h-4 text-amber-500" />,
+    },
+    {
+      id: 'admin',
+      label: 'Admin Panel',
+      icon: <ShieldCheck className="w-4 h-4 text-amber-500" />,
+      badge: isAdmin ? 'ADMIN' : 'PANEL',
+      highlight: true,
     },
     { id: 'settings', label: 'Settings & Profile', icon: <Settings className="w-4 h-4" /> },
   ];
