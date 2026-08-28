@@ -1,0 +1,6 @@
+{
+  "name": "AI Smart Expense Manager",
+  "description": "An intelligent personal finance and expense management assistant with AI natural language entry, automatic categorization, predictive spending insights, budget tracking, and interactive financial AI assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
