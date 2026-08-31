@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpense } from '../context/ExpenseContext';
-import { Sparkles, Shield, UserCheck, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Sparkles, UserCheck, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, KeyRound } from 'lucide-react';
 
 interface AuthViewProps {
   onSuccess?: () => void;
@@ -13,7 +13,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'user' | 'admin'>('user');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -35,7 +34,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
       const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
       const payload = mode === 'login' 
         ? { email, password }
-        : { name, email, password, role };
+        : { name, email, password };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -64,18 +63,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
     }
   };
 
-  const handleQuickDemo = (demoRole: 'admin' | 'user') => {
-    if (demoRole === 'admin') {
-      setEmail('admin@expenseai.com');
-      setPassword('admin123');
-      setName('System Administrator');
-      setRole('admin');
-    } else {
-      setEmail('kumawatprateek008@gmail.com');
-      setPassword('user123');
-      setName('Prateek Kumawat');
-      setRole('user');
-    }
+  const handleQuickDemo = () => {
+    setEmail('kumawatprateek008@gmail.com');
+    setPassword('user123');
+    setName('Prateek Kumawat');
   };
 
   return (
@@ -95,30 +86,20 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
         </p>
       </div>
 
-      {/* Quick Demo Pre-fill Pill Selector */}
-      <div className="mb-6 p-3 rounded-2xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200/50 dark:border-sky-800/40">
-        <div className="text-xs font-semibold text-sky-700 dark:text-sky-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+      {/* Quick Demo Pre-fill Button */}
+      <div className="mb-6 p-3 rounded-2xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200/50 dark:border-sky-800/40 flex items-center justify-between gap-2">
+        <div className="text-xs font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
           <KeyRound className="w-3.5 h-3.5" />
-          <span>Quick Demo One-Click Fill:</span>
+          <span>Quick Demo Account:</span>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => handleQuickDemo('admin')}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-bold text-amber-700 dark:text-amber-300 transition-colors"
-          >
-            <Shield className="w-3.5 h-3.5" />
-            <span>Admin Demo</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickDemo('user')}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-xs font-bold text-sky-700 dark:text-sky-300 transition-colors"
-          >
-            <UserCheck className="w-3.5 h-3.5" />
-            <span>Standard User</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleQuickDemo}
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+        >
+          <UserCheck className="w-3.5 h-3.5" />
+          <span>Fill Demo User</span>
+        </button>
       </div>
 
       {/* Error / Success feedback banner */}
@@ -197,40 +178,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
             </button>
           </div>
         </div>
-
-        {mode === 'register' && (
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Account Role
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setRole('user')}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  role === 'user'
-                    ? 'bg-sky-500 text-white border-sky-500 shadow-md shadow-sky-500/20'
-                    : 'bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/60 hover:bg-slate-200/50'
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Standard User</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('admin')}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  role === 'admin'
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-md shadow-amber-500/20'
-                    : 'bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/60 hover:bg-slate-200/50'
-                }`}
-              >
-                <Shield className="w-3.5 h-3.5" />
-                <span>Administrator</span>
-              </button>
-            </div>
-          </div>
-        )}
 
         <button
           type="submit"

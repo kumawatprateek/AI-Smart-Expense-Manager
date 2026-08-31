@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   LayoutDashboard,
   Receipt,
@@ -12,10 +12,8 @@ import {
   Trophy,
   Settings,
   Sparkles,
-  Flame,
-  ShieldCheck,
+  X,
 } from 'lucide-react';
-import { useExpense } from '../context/ExpenseContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -30,8 +28,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isOpenMobile,
   onCloseMobile,
 }) => {
-  const { user } = useExpense();
-  const isAdmin = user.role === 'admin' || user.email.toLowerCase().includes('admin');
+  // Prevent background scroll on mobile when sidebar is open
+  useEffect(() => {
+    if (isOpenMobile) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpenMobile]);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -43,14 +50,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'goals', label: 'Savings Goals', icon: <Target className="w-4 h-4" /> },
     {
       id: 'ai-chat',
-      label: 'AI Financial Assistant',
-      icon: <Bot className="w-4 h-4 text-indigo-500" />,
+      label: 'AI Assistant',
+      icon: <Bot className="w-4 h-4 text-sky-500" />,
       badge: 'AI',
     },
     {
       id: 'prediction',
-      label: 'Expense Predictions',
-      icon: <TrendingUp className="w-4 h-4 text-purple-500" />,
+      label: 'Expense Forecast',
+      icon: <TrendingUp className="w-4 h-4 text-[#00BAF2]" />,
       badge: 'ML',
     },
     {
@@ -58,35 +65,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Discipline & Badges',
       icon: <Trophy className="w-4 h-4 text-amber-500" />,
     },
-    {
-      id: 'admin',
-      label: 'Admin Panel',
-      icon: <ShieldCheck className="w-4 h-4 text-amber-500" />,
-      badge: isAdmin ? 'ADMIN' : 'PANEL',
-      highlight: true,
-    },
     { id: 'settings', label: 'Settings & Profile', icon: <Settings className="w-4 h-4" /> },
   ];
 
   return (
     <>
-      {/* Mobile backdrop */}
-      {isOpenMobile && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs md:hidden"
-          onClick={onCloseMobile}
-        />
-      )}
+      {/* Mobile Backdrop with Blur Effect and Smooth Fade Transition */}
+      <div
+        className={`fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm transition-all duration-300 md:hidden ${
+          isOpenMobile
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onCloseMobile}
+        aria-hidden="true"
+      />
 
-      {/* Sidebar Container */}
+      {/* Sidebar Container with Smooth Slide-in Transform */}
       <aside
         id="app-sidebar"
-        className={`fixed md:sticky top-16 z-40 h-[calc(100vh-4rem)] w-64 shrink-0 border-r border-white/60 dark:border-white/10 bg-white/40 dark:bg-slate-900/50 backdrop-blur-xl transition-transform duration-200 ease-in-out md:translate-x-0 overflow-y-auto flex flex-col justify-between p-3.5 ${
+        className={`fixed md:sticky top-0 md:top-16 left-0 z-50 md:z-30 h-screen md:h-[calc(100vh-4rem)] w-72 sm:w-80 md:w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b142c] shadow-2xl md:shadow-none transition-transform duration-300 ease-out md:translate-x-0 overflow-y-auto flex flex-col justify-between p-4 ${
           isOpenMobile ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div className="space-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-3 py-1.5 block">
+          {/* Mobile Drawer Header with Close Button */}
+          <div className="md:hidden flex items-center justify-between pb-3.5 mb-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#002970] text-[#00BAF2] border border-[#00BAF2]/30 flex items-center justify-center shadow-xs">
+                <Sparkles className="w-4 h-4 text-[#00BAF2]" />
+              </div>
+              <div>
+                <span className="font-extrabold text-sm text-[#002970] dark:text-white tracking-tight">
+                  Expense<span className="text-[#00BAF2]">AI</span>
+                </span>
+                <span className="block text-[9px] uppercase font-bold text-slate-400">
+                  Navigation
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={onCloseMobile}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close Sidebar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <span className="hidden md:block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 px-3 py-1.5">
             Navigation Menu
           </span>
 
@@ -99,22 +127,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onSelectTab(item.id);
                   onCloseMobile();
                 }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-sky-500 text-slate-950 font-bold shadow-[0_0_16px_rgba(56,189,248,0.35)]'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-white/40 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#002970] dark:bg-[#00BAF2] text-white dark:text-[#001A4D] font-bold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className={isActive ? 'text-slate-950 font-bold' : ''}>{item.icon}</span>
+                  <span className={isActive ? 'text-white dark:text-[#001A4D]' : ''}>{item.icon}</span>
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span
-                    className={`px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                    className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${
                       isActive
-                        ? 'bg-slate-950/20 text-slate-950'
-                        : 'bg-sky-500/15 border border-sky-400/30 text-sky-700 dark:text-sky-300'
+                        ? 'bg-white/20 dark:bg-black/20 text-white dark:text-[#001A4D]'
+                        : 'bg-[#00BAF2]/10 border border-[#00BAF2]/30 text-[#008db8] dark:text-[#00BAF2]'
                     }`}
                   >
                     {item.badge}
@@ -125,21 +153,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Pro AI Assistant Mini Card at Sidebar Bottom */}
-        <div className="p-3.5 rounded-2xl bg-white/40 dark:bg-slate-800/40 backdrop-blur-md border border-white/40 dark:border-white/10 mt-4 space-y-2 shadow-xs">
+        {/* Paytm-styled Intelligence Badge at Sidebar Bottom */}
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0f1a36] border border-slate-200 dark:border-slate-800 mt-4 space-y-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-sky-400 to-indigo-600 text-white flex items-center justify-center shadow-xs">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="w-5 h-5 rounded-md bg-[#00BAF2] text-[#002970] flex items-center justify-center font-bold">
+              <Sparkles className="w-3 h-3" />
             </div>
-            <span className="font-bold text-xs text-sky-900 dark:text-sky-200">
-              Gemini 3.7 Intelligence
+            <span className="font-bold text-xs text-[#002970] dark:text-[#00BAF2]">
+              AI Financial Core
             </span>
           </div>
-          <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-            Categorizes notes, catches anomalies, and predicts future spending automatically.
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+            Automated spending insights, voice entry, and private ledger segregation.
           </p>
         </div>
       </aside>
     </>
   );
 };
+

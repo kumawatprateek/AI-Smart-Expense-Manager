@@ -5,27 +5,26 @@ import {
   Bell,
   Sun,
   Moon,
-  DollarSign,
-  User as UserIcon,
-  Zap,
-  TrendingUp,
-  ShieldCheck,
-  Shield,
+  Laptop,
   LogIn,
   LogOut,
+  ChevronDown,
+  Settings,
+  Coins,
 } from 'lucide-react';
 import { useExpense } from '../context/ExpenseContext';
+
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 interface NavbarProps {
   onOpenNaturalLanguage: () => void;
   onOpenAddTransaction: () => void;
   onToggleNotifications: () => void;
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
+  themeMode: ThemeMode;
+  onSetThemeMode: (mode: ThemeMode) => void;
   onNavigateToSettings: () => void;
   onNavigateToAiChat: () => void;
   onOpenAuthModal?: () => void;
-  onNavigateToAdmin?: () => void;
   onLogout?: () => void;
 }
 
@@ -33,17 +32,17 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenNaturalLanguage,
   onOpenAddTransaction,
   onToggleNotifications,
-  darkMode,
-  onToggleDarkMode,
+  themeMode,
+  onSetThemeMode,
   onNavigateToSettings,
-  onNavigateToAiChat,
   onOpenAuthModal,
-  onNavigateToAdmin,
   onLogout,
 }) => {
-  const { user, currencySymbol, setCurrency, notifications, logoutUser } = useExpense();
+  const { user, setCurrency, notifications, logoutUser } = useExpense();
   const unreadAlerts = notifications.filter((n) => !n.isRead).length;
-  const isAdmin = user.role === 'admin' || user.email.toLowerCase().includes('admin');
+
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const currencies = [
     { code: 'INR', symbol: '₹', label: 'INR (₹)' },
@@ -53,59 +52,64 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/60 dark:border-white/10 bg-white/50 dark:bg-slate-900/60 backdrop-blur-xl transition-colors shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#070d1e] transition-colors shadow-xs">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Brand Logo */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-400 via-cyan-500 to-indigo-500 flex items-center justify-center text-white shadow-[0_0_18px_rgba(56,189,248,0.45)]">
-            <Sparkles className="w-5 h-5" />
+        <div
+          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer shrink-0 min-w-0"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#002970] text-[#00BAF2] border border-[#00BAF2]/30 flex items-center justify-center shadow-xs shrink-0">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#00BAF2]" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 dark:text-white text-base tracking-tight">
-                AI Smart Expense
+          <div className="min-w-0">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <span className="font-extrabold text-[#002970] dark:text-white text-sm sm:text-lg tracking-tight truncate">
+                Expense<span className="text-[#00BAF2]">AI</span>
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/15 border border-sky-400/30 text-sky-700 dark:text-sky-300">
-                PRO AI
+              <span className="px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded text-[8px] sm:text-[9px] font-black bg-[#00BAF2]/15 text-[#007b9e] dark:text-[#00BAF2] border border-[#00BAF2]/20 shrink-0">
+                PRO
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal hidden sm:block">
-              Intelligent Personal Financial Assistant
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium hidden md:block leading-none">
+              Smart Ledger & Intelligence
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Natural Language AI Entry */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Quick Natural Language AI Entry - Tablet & Desktop */}
           <button
             id="btn-nlp-header"
             onClick={onOpenNaturalLanguage}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-400/30 dark:border-sky-400/30 text-xs font-semibold backdrop-blur-md shadow-xs transition-all cursor-pointer"
+            title="Ask AI to record an expense via speech or text"
+            className="hidden md:flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#00BAF2]/10 hover:bg-[#00BAF2]/20 text-[#002970] dark:text-[#00BAF2] border border-[#00BAF2]/30 text-xs font-bold transition-all cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-            <span className="hidden sm:inline">Ask AI Entry</span>
+            <Sparkles className="w-3.5 h-3.5 text-[#00BAF2]" />
+            <span>AI Entry</span>
           </button>
 
-          {/* Quick Add Manual Transaction */}
+          {/* Quick Add Manual Transaction - Tablet & Desktop */}
           <button
             id="btn-add-tx-header"
             onClick={onOpenAddTransaction}
-            className="flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(56,189,248,0.35)] transition-all cursor-pointer"
+            title="Add a manual transaction"
+            className="hidden sm:flex items-center gap-1 px-2.5 sm:px-3.5 py-1.5 rounded-lg bg-[#002970] dark:bg-[#00BAF2] text-white dark:text-[#001A4D] font-bold text-xs shadow-xs hover:opacity-95 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span className="hidden sm:inline">Add Transaction</span>
+            <span>Add</span>
           </button>
 
-          {/* Currency Switcher */}
-          <div className="relative hidden sm:block">
+          {/* Currency Switcher - Desktop only */}
+          <div className="relative hidden lg:block">
             <select
               value={user.currency}
               onChange={(e) => {
                 const sel = currencies.find((c) => c.code === e.target.value);
                 if (sel) setCurrency(sel.code, sel.symbol);
               }}
-              className="appearance-none pl-2.5 pr-6 py-1.5 rounded-xl border border-white/20 dark:border-white/10 bg-white/40 dark:bg-slate-800/60 backdrop-blur-md text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer"
+              className="appearance-none pl-2.5 pr-6 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold focus:outline-none cursor-pointer"
             >
               {currencies.map((c) => (
                 <option key={c.code} value={c.code} className="bg-slate-900 text-white">
@@ -113,79 +117,175 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">
               ▼
             </span>
           </div>
 
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={onToggleDarkMode}
-            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 bg-white/30 dark:bg-slate-800/50 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all"
-          >
-            {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
-          </button>
+          {/* 3-Way Theme Switcher (Light / Dark / System) */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setIsThemeMenuOpen(!isThemeMenuOpen);
+                setIsUserMenuOpen(false);
+              }}
+              title={`Theme: ${themeMode.toUpperCase()} (Click to change)`}
+              className="flex items-center gap-1 p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+            >
+              {themeMode === 'light' && <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500" />}
+              {themeMode === 'dark' && <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00BAF2]" />}
+              {themeMode === 'system' && <Laptop className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500 dark:text-slate-300" />}
+              <ChevronDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" />
+            </button>
+
+            {isThemeMenuOpen && (
+              <div
+                className="absolute right-0 mt-1.5 w-36 rounded-xl bg-white dark:bg-[#0f1a36] border border-slate-200 dark:border-slate-700 shadow-lg py-1 z-50 animate-fadeIn text-xs"
+                onClick={() => setIsThemeMenuOpen(false)}
+              >
+                <button
+                  onClick={() => onSetThemeMode('light')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                    themeMode === 'light'
+                      ? 'text-[#002970] dark:text-[#00BAF2] font-bold bg-[#00BAF2]/10'
+                      : 'text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Light Mode</span>
+                </button>
+                <button
+                  onClick={() => onSetThemeMode('dark')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                    themeMode === 'dark'
+                      ? 'text-[#002970] dark:text-[#00BAF2] font-bold bg-[#00BAF2]/10'
+                      : 'text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <Moon className="w-3.5 h-3.5 text-[#00BAF2]" />
+                  <span>Dark Mode</span>
+                </button>
+                <button
+                  onClick={() => onSetThemeMode('system')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${
+                    themeMode === 'system'
+                      ? 'text-[#002970] dark:text-[#00BAF2] font-bold bg-[#00BAF2]/10'
+                      : 'text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <Laptop className="w-3.5 h-3.5 text-slate-500" />
+                  <span>System Default</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Notifications Bell */}
           <button
             id="btn-notification-bell"
             onClick={onToggleNotifications}
-            className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 bg-white/30 dark:bg-slate-800/50 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all"
+            title="Spending notifications and alerts"
+            className="relative p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {unreadAlerts > 0 && (
-              <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]">
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-rose-500 text-white text-[8px] sm:text-[9px] font-bold flex items-center justify-center shadow-xs">
                 {unreadAlerts > 9 ? '9+' : unreadAlerts}
               </span>
             )}
           </button>
 
-          {/* Switch / Login Button */}
-          {onOpenAuthModal && (
+          {/* User Profile & Actions Dropdown Menu */}
+          <div className="relative">
             <button
-              onClick={onOpenAuthModal}
-              title="Switch Account / Login / Register"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-400/30 text-xs font-bold transition-all cursor-pointer"
+              onClick={() => {
+                setIsUserMenuOpen(!isUserMenuOpen);
+                setIsThemeMenuOpen(false);
+              }}
+              title="User profile & options"
+              className="flex items-center gap-1.5 p-1 sm:px-2 sm:py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Switch / Login</span>
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[#002970] text-[#00BAF2] text-xs font-bold flex items-center justify-center shrink-0">
+                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 max-w-[80px] truncate leading-tight">
+                  {user.name}
+                </span>
+                <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 leading-none">
+                  Active
+                </span>
+              </div>
+              <ChevronDown className="w-3 h-3 text-slate-400 hidden sm:block" />
             </button>
-          )}
 
-          {/* Log Out / Exit to Landing */}
-          <button
-            onClick={() => {
-              if (onLogout) onLogout();
-              else logoutUser();
-            }}
-            title="Log Out & Return to Landing Website"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/25 text-xs font-bold transition-all cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Sign Out</span>
-          </button>
+            {isUserMenuOpen && (
+              <div
+                className="absolute right-0 mt-1.5 w-48 sm:w-56 rounded-xl bg-white dark:bg-[#0f1a36] border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-50 animate-fadeIn text-xs"
+                onClick={() => setIsUserMenuOpen(false)}
+              >
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                  <p className="font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
+                </div>
 
-          {/* User Avatar & Role Button */}
-          <button
-            onClick={onNavigateToSettings}
-            className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-xl bg-white/30 dark:bg-slate-800/50 backdrop-blur-md border border-white/10 hover:border-white/20 transition-all cursor-pointer"
-          >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 text-white text-xs font-semibold flex items-center justify-center shadow-xs">
-              {user.name.charAt(0)}
-            </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-200 max-w-[80px] truncate leading-tight">
-                {user.name}
-              </span>
-              <span className={`text-[9px] font-extrabold uppercase leading-none ${isAdmin ? 'text-amber-500' : 'text-sky-400'}`}>
-                {isAdmin ? 'Admin' : 'User'}
-              </span>
-            </div>
-          </button>
+                <button
+                  onClick={onNavigateToSettings}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Profile & Settings</span>
+                </button>
+
+                {/* Mobile Currency Selection */}
+                <div className="lg:hidden px-3 py-2 border-t border-slate-100 dark:border-slate-800 mt-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5 flex items-center gap-1">
+                    <Coins className="w-3 h-3" /> Currency
+                  </span>
+                  <div className="grid grid-cols-2 gap-1">
+                    {currencies.map((c) => (
+                      <button
+                        key={c.code}
+                        onClick={() => setCurrency(c.code, c.symbol)}
+                        className={`px-2 py-1 rounded text-[11px] font-bold transition-all text-center ${
+                          user.currency === c.code
+                            ? 'bg-[#00BAF2] text-[#001A4D]'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        }`}
+                      >
+                        {c.symbol} {c.code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {onOpenAuthModal && (
+                  <button
+                    onClick={onOpenAuthModal}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-[#00BAF2]" />
+                    <span>Switch / Login Account</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (onLogout) onLogout();
+                    else logoutUser();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 font-semibold transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
   );
 };
+
 
