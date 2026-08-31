@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useExpense } from '../context/ExpenseContext';
-import { Sparkles, UserCheck, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff, KeyRound } from 'lucide-react';
+import { Sparkles, UserCheck, Lock, Mail, ArrowRight, CheckCircle2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 interface AuthViewProps {
   onSuccess?: () => void;
@@ -63,12 +63,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
     }
   };
 
-  const handleQuickDemo = () => {
-    setEmail('kumawatprateek008@gmail.com');
-    setPassword('user123');
-    setName('Prateek Kumawat');
-  };
-
   return (
     <div className="w-full max-w-md mx-auto my-auto p-6 sm:p-8 rounded-3xl bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl transition-all">
       {/* Brand Header */}
@@ -84,22 +78,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
             ? 'Sign in to access your personal AI finance dashboard'
             : 'Join Expense AI to master your money with smart intelligence'}
         </p>
-      </div>
-
-      {/* Quick Demo Pre-fill Button */}
-      <div className="mb-6 p-3 rounded-2xl bg-sky-50/70 dark:bg-sky-950/40 border border-sky-200/50 dark:border-sky-800/40 flex items-center justify-between gap-2">
-        <div className="text-xs font-semibold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
-          <KeyRound className="w-3.5 h-3.5" />
-          <span>Quick Demo Account:</span>
-        </div>
-        <button
-          type="button"
-          onClick={handleQuickDemo}
-          className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-        >
-          <UserCheck className="w-3.5 h-3.5" />
-          <span>Fill Demo User</span>
-        </button>
       </div>
 
       {/* Error / Success feedback banner */}
@@ -130,7 +108,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Prateek Kumawat"
+                placeholder="e.g. Jane Doe"
                 className="w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
               />
               <UserCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -148,7 +126,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onSuccess, initialMode = 'lo
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. prateek@example.com"
+              placeholder="e.g. you@example.com"
               className="w-full px-4 py-2.5 pl-10 rounded-xl bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 text-sm focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
             />
             <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
